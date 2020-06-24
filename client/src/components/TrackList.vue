@@ -4,7 +4,7 @@ import { Ref } from '@vue/composition-api';
 import TrackItem from '@/components/TrackItem.vue';
 import CreationMode from '@/components/CreationMode.vue';
 import Track, { TrackId } from '@/lib/track';
-import { NewTrackSettings } from '@/use/useSettings';
+import { NewTrackSettings } from '@/use/Settings/newTrackSettings';
 
 export default Vue.extend({
   name: 'TrackList',

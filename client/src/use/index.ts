@@ -8,7 +8,6 @@ import useStyling from './useStyling';
 import useTrackFilters from './useTrackFilters';
 import useTrackSelectionControls from './useTrackSelectionControls';
 import useTrackStore from './useTrackStore';
-import useModeManager from './useModeManager';
 import useSettings from './useSettings';
 
 export {
@@ -21,6 +20,5 @@ export {
   useTrackFilters,
   useTrackSelectionControls,
   useTrackStore,
-  useModeManager,
   useSettings,
 };

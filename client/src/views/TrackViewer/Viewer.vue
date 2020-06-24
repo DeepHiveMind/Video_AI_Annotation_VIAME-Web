@@ -18,7 +18,6 @@ import {
   useTrackSelectionControls,
   useTrackStore,
   useEventChart,
-  useModeManager,
   useSettings,
 } from '@/use';
 
@@ -30,6 +29,7 @@ import UserGuideButton from '@/components/UserGuideButton.vue';
 import Export from '@/components/Export.vue';
 import RunPipelineMenu from '@/components/RunPipelineMenu.vue';
 
+import UIHandler from '@/uiHandler/uiHandler';
 import ControlsContainer from './ControlsContainer.vue';
 import Layers from './Layers.vue';
 import Sidebar from './Sidebar.vue';
@@ -132,15 +132,14 @@ export default defineComponent({
       enabledTrackIds, selectedTrackId, typeColorMapper, trackMap,
     });
 
-    const { newTrackSettings, updateNewTrackSettings } = useSettings();
-    // Provides wrappers for actions to integrate with settings
-    const { handler } = useModeManager({
+    const { newTrackSettings } = useSettings();
+
+    const handler = new UIHandler({
       selectedTrackId,
       editingTrack,
       frame,
       trackMap,
       playbackComponent,
-      newTrackSettings,
       selectTrack,
       getTrack,
       selectNextTrack,
@@ -195,9 +194,9 @@ export default defineComponent({
         selectedTrackId,
         editingTrack,
         typeColorMapper,
-        newTrackSettings,
+        newTrackSettings: newTrackSettings.settings,
       },
-      updateNewTrackSettings,
+      updateNewTrackSettings: newTrackSettings.update,
       layerProps: {
         trackMap,
         trackIds: enabledTrackIds,
@@ -269,10 +268,10 @@ export default defineComponent({
     >
       <sidebar
         v-bind="sidebarProps"
-        @track-add="handler.addTrack(frame)"
-        @track-remove="handler.removeTrack"
-        @track-click="handler.trackClick"
-        @track-edit="handler.trackEdit"
+        @track-add="handler.addTrack(handler, frame)"
+        @track-remove="handler.removeTrack($event)"
+        @track-click="handler.trackClick($event)"
+        @track-edit="handler.trackEdit($event)"
         @track-next="handler.selectNext(1)"
         @track-previous="handler.selectNext(-1)"
         @track-type-change="handler.trackTypeChange($event)"
@@ -305,9 +304,9 @@ export default defineComponent({
           </template>
           <layers
             v-bind="layerProps"
-            @selectTrack="handler.selectTrack"
-            @featurePointUpdated="featurePointed"
-            @update-rect-bounds="handler.updateRectBounds"
+            @selectTrack="handler.selectTrack(...arguments)"
+            @featurePointUpdated="featurePointed(...arguments)"
+            @update-rect-bounds="handler.updateRectBounds(...arguments)"
           />
         </component>
         <v-menu

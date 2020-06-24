@@ -11,7 +11,7 @@ import AttributesPanel from '@/components/AttributesPanel.vue';
 import TypeList from '@/components/TypeList.vue';
 import TrackList from '@/components/TrackList.vue';
 import Track, { TrackId } from '@/lib/track';
-import { NewTrackSettings } from '@/use/useSettings';
+import { NewTrackSettings } from '@/use/Settings/newTrackSettings';
 
 export default defineComponent({
   props: {

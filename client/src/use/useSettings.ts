@@ -1,61 +1,27 @@
-import {
-  reactive, ref,
-} from '@vue/composition-api';
+import uiHandlers from '@/uiHandler/uiHandlerDecorator';
+import useNewTrackSettings from './Settings/newTrackSettings';
 
-export interface NewTrackSettings {
-    mode: string;
-    type: string;
-    modeSettings: {
-      Track: {
-        autoAdvanceFrame: boolean;
-      };
-      Detection: {
-        continuous: boolean;
-      };
-    };
-  }
 
 export default function useSettings() {
-  const newTrackSettings = reactive({
-    mode: ref('Track'),
-    type: ref('unknown'),
-    modeSettings: {
-      Track: {
-        autoAdvanceFrame: ref(false),
-      },
-      Detection: {
-        continuous: ref(true),
-      },
-    },
-  });
-
-  function saveSettings() {
+  function saveSettings(name: string, settingsJSON: string) {
     //Get all settings
-    const Settings = {
-      newTrackSettings,
-    };
+    const Settings: Record<string, string> = {};
+    Settings[name] = JSON.parse(settingsJSON);
     localStorage.setItem('Settings', JSON.stringify(Settings));
   }
 
-  function updateNewTrackSettings(updatedNewTrackSettings: NewTrackSettings) {
-    newTrackSettings.mode = updatedNewTrackSettings.mode;
-    newTrackSettings.type = updatedNewTrackSettings.type;
-    // eslint-disable-next-line max-len
-    newTrackSettings.modeSettings.Track.autoAdvanceFrame = updatedNewTrackSettings.modeSettings.Track.autoAdvanceFrame;
-    // eslint-disable-next-line max-len
-    newTrackSettings.modeSettings.Detection.continuous = updatedNewTrackSettings.modeSettings.Detection.continuous;
-
-    //Handle Saving of the data
-    saveSettings();
-  }
-
   //Load default settings initially
-  const storedSettings = localStorage.getItem('Settings');
-  if (storedSettings) {
-    const defaultSettings = JSON.parse(storedSettings);
-    updateNewTrackSettings(defaultSettings.newTrackSettings);
+  function loadSettings(name: string) {
+    const storedSettings = localStorage.getItem('Settings');
+    if (storedSettings) {
+      const defaultSettings = JSON.parse(storedSettings);
+      return defaultSettings[name];
+    }
+    return null;
   }
 
+  const newTrackSettings = useNewTrackSettings({ saveSettings, loadSettings });
+  uiHandlers.addModifier(newTrackSettings.handler);
 
-  return { newTrackSettings, updateNewTrackSettings };
+  return { newTrackSettings };
 }
