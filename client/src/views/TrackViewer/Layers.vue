@@ -83,6 +83,12 @@ export default defineComponent({
       typeStyling: props.typeStyling,
       type: 'polygon',
     });
+    const lineAnnotationLayer = new AnnotationLayer({
+      annotator,
+      stateStyling: props.stateStyling,
+      typeStyling: props.typeStyling,
+      type: 'line',
+    });
 
     const textLayer = new TextLayer({
       annotator,
@@ -176,6 +182,7 @@ export default defineComponent({
       } else {
         polyAnnotationLayer.disable();
       }
+      lineAnnotationLayer.changeData(frameData);
       markerLayer.changeData(frameData);
       if (annotationVisible_.length) {
         textLayer.changeData(frameData);
@@ -251,12 +258,14 @@ export default defineComponent({
     polyAnnotationLayer.$on('annotationRightClicked', Clicked);
 
     editAnnotationLayer.$on('update:geojson',
-      (data: GeoJSON.Feature<GeoJSON.Polygon>, type: string) => {
+      (data: GeoJSON.Feature<GeoJSON.Polygon | GeoJSON.MultiLineString>, type: string) => {
         if (type === 'rectangle') {
-          const bounds = geojsonToBound(data);
+          const bounds = geojsonToBound(data as GeoJSON.Feature<GeoJSON.Polygon>);
           emit('update-rect-bounds', frameNumber.value, bounds);
         } else if (type === 'polygon') {
           emit('update-polygon', frameNumber.value, data.geometry);
+        } else if (type === 'line') {
+          emit('update-line', frameNumber.value, data.geometry);
         }
       });
 

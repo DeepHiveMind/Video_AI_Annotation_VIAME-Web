@@ -60,8 +60,11 @@ function boundToGeojson(bounds: RectBounds): GeoJSON.Polygon {
   };
 }
 
-function findBounds(polygon: GeoJSON.Polygon): RectBounds {
-  const coords = polygon.coordinates[0];
+function findBounds(data: GeoJSON.Polygon | GeoJSON.LineString): RectBounds {
+  let coords = data.coordinates[0];
+  if (data.type === 'LineString') {
+    coords = data.coordinates;
+  }
   const limits = {
     xLow: Infinity,
     xHigh: -Infinity,

@@ -399,6 +399,7 @@ export default defineComponent({
             @featurePointUpdated="featurePointed"
             @update-rect-bounds="handler.updateRectBounds"
             @update-polygon="handler.updatePolygon"
+            @update-line="handler.updateLine"
             @select-feature-handle="handler.selectFeatureHandle"
           />
         </component>

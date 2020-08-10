@@ -3,10 +3,12 @@ import BaseLayer, { BaseLayerParams, LayerStyle } from '@/components/layers/Base
 import { boundToGeojson } from '@/utils';
 import geo, { GeoEvent } from 'geojs';
 import { FrameDataTrack } from '@/components/layers/LayerTypes';
+import { thresholdSturges } from 'd3';
 
 export type EditAnnotationTypes = 'point' | 'rectangle' | 'polygon' | 'line';
 interface EditAnnotationLayerParams {
   type: EditAnnotationTypes;
+  pointLimit: number;
 }
 
 interface EditHandleStyle {
@@ -35,6 +37,8 @@ export default class EditAnnotationLayer extends BaseLayer<GeoJSON.Feature> {
 
   selectedHandleIndex: number;
 
+  pointLimit: number;
+
   hoverHandleIndex: number;
 
   constructor(params: BaseLayerParams & EditAnnotationLayerParams) {
@@ -44,6 +48,7 @@ export default class EditAnnotationLayer extends BaseLayer<GeoJSON.Feature> {
     this.type = params.type;
     this.selectedHandleIndex = -1;
     this.hoverHandleIndex = -1;
+    this.pointLimit = -1;
     //Only initialize once, prevents recreating Layer each edit
     this.initialize();
   }
@@ -166,6 +171,9 @@ export default class EditAnnotationLayer extends BaseLayer<GeoJSON.Feature> {
         if (this.type === 'polygon' && track.features.polygon) {
           geoJSONData = track.features.polygon;
         }
+        if (this.type === 'line' && track.features.line) {
+          geoJSONData = track.features.line;
+        }
         if (!geoJSONData) {
           this.mode = 'creation';
           this.featureLayer.mode(this.type);
@@ -276,7 +284,7 @@ export default class EditAnnotationLayer extends BaseLayer<GeoJSON.Feature> {
    */
   createStyle(): LayerStyle<GeoJSON.Feature> {
     const baseStyle = super.createStyle();
-    if (this.type === 'rectangle' || this.type === 'polygon') {
+    if (this.type === 'rectangle' || this.type === 'polygon' || this.type === 'line') {
       return {
         ...baseStyle,
         fill: false,
@@ -310,6 +318,13 @@ export default class EditAnnotationLayer extends BaseLayer<GeoJSON.Feature> {
     if (this.type === 'point') {
       return {
         handles: false,
+      };
+    }
+    if (this.type === 'line') {
+      return {
+        handles: {
+          edge: this.pointLimit !== -1,
+        },
       };
     }
     if (this.type === 'polygon') {

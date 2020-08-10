@@ -14,11 +14,11 @@ interface RectGeoJSData{
 }
 
 interface AnnotationLayerParams {
-  type: 'rectangle' | 'polygon';
+  type: 'rectangle' | 'polygon' | 'line';
 }
 
 export default class AnnotationLayer extends BaseLayer<RectGeoJSData> {
-  type: 'rectangle' | 'polygon';
+  type: 'rectangle' | 'polygon' | 'line';
 
   drawingOther: boolean; //drawing another type of annotation at the same time?
 
@@ -37,8 +37,12 @@ export default class AnnotationLayer extends BaseLayer<RectGeoJSData> {
     const layer = this.annotator.geoViewer.createLayer('feature', {
       features: ['point', 'line', 'polygon'],
     });
+    let featureType = 'polygon';
+    if (this.type === 'line') {
+      featureType = 'line';
+    }
     this.featureLayer = layer
-      .createFeature('polygon', { selectionAPI: true })
+      .createFeature(featureType, { selectionAPI: true })
       .geoOn(geo.event.feature.mouseclick, (e: GeoEvent) => {
         /**
          * Handle clicking on individual annotations, if DrawingOther is true we use the
@@ -94,6 +98,11 @@ export default class AnnotationLayer extends BaseLayer<RectGeoJSData> {
             polygon = track.features.polygon;
           }
         }
+        if (track.features.line) {
+          if (this.type === 'line') {
+            polygon = track.features.line;
+          }
+        }
         //exit if in poly mode with no polygon available
         if (!hasPoly && this.type === 'polygon') {
           return;
@@ -113,10 +122,17 @@ export default class AnnotationLayer extends BaseLayer<RectGeoJSData> {
   }
 
   redraw() {
-    this.featureLayer
-      .data(this.formattedData)
-      .polygon((d: RectGeoJSData) => d.polygon.coordinates[0])
-      .draw();
+    if (this.type !== 'line') {
+      this.featureLayer
+        .data(this.formattedData)
+        .polygon((d: RectGeoJSData) => d.polygon.coordinates[0])
+        .draw();
+    } else {
+      this.featureLayer
+        .data(this.formattedData)
+        .line((d: RectGeoJSData) => d.polygon.coordinates)
+        .draw();
+    }
   }
 
   disable() {

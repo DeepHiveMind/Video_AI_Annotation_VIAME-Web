@@ -57,7 +57,7 @@ export default function useModeManager({
 
   const annotationModes = reactive({
     state: {
-      visible: ['rectangle', 'polygon'],
+      visible: ['rectangle', 'polygon', 'line'],
       editing: 'rectangle',
     },
     // selectedFeatureHandle could arguably belong in useTrackSelectionControls,
@@ -171,6 +171,40 @@ export default function useModeManager({
     }
   }
 
+  function handleUpdateLine(frameNum: number, data: GeoJSON.LineString) {
+    if (selectedTrackId.value !== null) {
+      const track = trackMap.get(selectedTrackId.value);
+      if (track) {
+        // Determines if we are creating a new Detection
+        const { features, interpolate } = track.canInterpolate(frameNum);
+        const [real] = features;
+        if (!real || real.bounds === undefined) {
+          newDetectionMode = true;
+        }
+        const interpolateTrack = newTrackMode
+          ? newTrackSettings.modeSettings.Track.interpolate
+          : interpolate;
+
+        track.setFeature({
+          frame: frameNum,
+          line: data,
+          bounds: findBounds(data),
+          keyframe: true,
+          interpolate: (newDetectionMode && !newTrackMode)
+            ? false : interpolateTrack,
+        });
+        track.setFeature({
+          frame: frameNum,
+          bounds: findBounds(data),
+        });
+        //If it is a new track and we have newTrack Settings
+        if (newTrackMode && newDetectionMode) {
+          newTrackSettingsAfterLogic(track);
+        }
+        newDetectionMode = false;
+      }
+    }
+  }
   /**
    * Removes the selectedIndex point for the selected Polygon/line
    */
@@ -247,6 +281,7 @@ export default function useModeManager({
       addTrack: handleAddTrack,
       updateRectBounds: handleUpdateRectBounds,
       updatePolygon: handleUpdatePolygon,
+      updateLine: handleUpdateLine,
       selectNext: handleSelectNext,
       trackClick: handleTrackClick,
       removeTrack: handleRemoveTrack,

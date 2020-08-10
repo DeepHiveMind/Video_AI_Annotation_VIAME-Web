@@ -21,6 +21,7 @@ export interface Feature {
   keyframe?: boolean;
   bounds?: RectBounds;
   polygon?: GeoJSON.Polygon;
+  line?: GeoJSON.LineString;
   fishLength?: number;
   attributes?: StringKeyObject;
   head?: [number, number];
