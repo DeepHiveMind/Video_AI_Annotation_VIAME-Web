@@ -65,6 +65,10 @@ export default defineComponent({
       type: Object as PropType<Ref<string>>,
       required: true,
     },
+    innerMode: {
+      type: Object as PropType<Ref<'Outside' | 'Hole'>>,
+      required: true,
+    },
   },
 
   setup(props, { emit }) {
@@ -114,6 +118,7 @@ export default defineComponent({
       tracks: Track[],
       visibleModes: EditAnnotationTypes[],
       selectedKey: string,
+      innerMode: 'Outside' | 'Hole',
     ) {
       // intervalTree requires custom search because 0 is treated as false by default
       const currentFrameIds: TrackId[] = props.intervalTree.search(
@@ -124,6 +129,9 @@ export default defineComponent({
       if (editingTrack) {
         editAnnotationLayer.setType(editingTrack);
         editAnnotationLayer.setKey(selectedKey);
+        if (editingTrack === 'Polygon') {
+          editAnnotationLayer.setPolyMode(innerMode);
+        }
       }
 
       const frameData = [] as FrameDataTrack[];
@@ -169,11 +177,12 @@ export default defineComponent({
       } else {
         lineLayer.disable();
       }
-      pointLayer.changeData(frameData);
       if (visibleModes.length) {
         textLayer.changeData(frameData);
+        pointLayer.changeData(frameData);
       } else {
         textLayer.disable();
+        pointLayer.disable();
       }
 
       if (selectedTrackId !== null) {
@@ -213,6 +222,7 @@ export default defineComponent({
       props.tracks.value,
       props.visibleModes.value,
       props.selectedKey.value,
+      props.innerMode.value,
     );
 
     watch([
@@ -221,6 +231,7 @@ export default defineComponent({
       props.tracks,
       props.selectedTrackId,
       props.visibleModes,
+      props.innerMode,
     ], () => {
       updateLayers(
         frameNumber.value,
@@ -229,6 +240,7 @@ export default defineComponent({
         props.tracks.value,
         props.visibleModes.value,
         props.selectedKey.value,
+        props.innerMode.value,
       );
     });
 

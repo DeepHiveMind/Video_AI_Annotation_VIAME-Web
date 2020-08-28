@@ -220,6 +220,10 @@ export default Vue.extend({
           disabled: $prompt.visible() },
         { bind: 'down', handler: (el, event) => scrollPreventDefault(el, event, 'down'),
           disabled: $prompt.visible() },
+        { bind: 'w', handler: (el, event) => scrollPreventDefault(el, event, 'up'),
+          disabled: $prompt.visible() },
+        { bind: 's', handler: (el, event) => scrollPreventDefault(el, event, 'down'),
+          disabled: $prompt.visible() },
         { bind: 'enter', handler: () => $emit('track-click', selectedTrackId.value),
           disabled: $prompt.visible()},
         { bind: 'del', handler: () =>

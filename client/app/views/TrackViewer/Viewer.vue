@@ -175,6 +175,7 @@ export default defineComponent({
       editingMode,
       visibleModes,
       selectedKey,
+      innerMode,
     } = useModeManager({
       selectedTrackId,
       editingTrack,
@@ -276,6 +277,7 @@ export default defineComponent({
       },
       featureHandleControlsProps: {
         selectedFeatureHandle,
+        innerMode,
       },
       modeEditorProps: {
         editingMode,
@@ -304,6 +306,7 @@ export default defineComponent({
         typeStyling,
         visibleModes,
         selectedKey,
+        innerMode,
       },
     };
   },
@@ -337,6 +340,7 @@ export default defineComponent({
         v-bind="featureHandleControlsProps"
         @delete-point="handler.removePoint"
         @delete-annotation="handler.removeAnnotation"
+        @toggle-poly-mode="handler.toggleInnerMode"
       />
       <editor-menu
         v-bind="modeEditorProps"

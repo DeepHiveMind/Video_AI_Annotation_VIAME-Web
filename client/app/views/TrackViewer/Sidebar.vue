@@ -112,10 +112,10 @@ export default defineComponent({
   >
     <v-btn
       v-mousetrap="[
-        { bind: 'a', handler: swapTabs },
+        { bind: 'q', handler: swapTabs },
       ]"
       icon
-      title="press `a`"
+      title="press `q`"
       class="swap-button"
       @click="swapTabs"
     >

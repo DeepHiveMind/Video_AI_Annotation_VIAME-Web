@@ -53,8 +53,8 @@ export default {
       { bind: 'left', handler: previousFrame, disabled: $prompt.visible() },
       { bind: 'right', handler: nextFrame, disabled: $prompt.visible()},
       { bind: 'space', handler: togglePlay, disabled: $prompt.visible() },
-      { bind: 'f', handler: nextFrame, disabled: $prompt.visible() },
-      { bind: 'd', handler: previousFrame, disabled: $prompt.visible() },
+      { bind: 'd', handler: nextFrame, disabled: $prompt.visible() },
+      { bind: 'a', handler: previousFrame, disabled: $prompt.visible() },
     ]"
   >
     <v-toolbar

@@ -93,7 +93,15 @@ export default class PolygonLayer extends BaseLayer<PolyGeoJSData> {
     redraw() {
       this.featureLayer
         .data(this.formattedData)
-        .polygon((d: PolyGeoJSData) => d.polygon.coordinates[0])
+        .polygon((d: PolyGeoJSData) => {
+          const output = {
+            outer: d.polygon.coordinates[0],
+          };
+          if (d.polygon.coordinates[1]) {
+            output.inner = [d.polygon.coordinates[1]];
+          }
+          return output;
+        })
         .draw();
     }
 

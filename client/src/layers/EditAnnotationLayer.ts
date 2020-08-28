@@ -3,6 +3,7 @@ import { FrameDataTrack } from 'vue-media-annotator/layers/LayerTypes';
 import BaseLayer, { BaseLayerParams, LayerStyle } from 'vue-media-annotator/layers/BaseLayer';
 import { boundToGeojson } from 'vue-media-annotator/utils';
 import geo, { GeoEvent } from 'geojs';
+import { negate, cloneDeep } from 'lodash';
 
 export type EditAnnotationTypes = 'Point' | 'rectangle' | 'Polygon' | 'LineString';
 interface EditAnnotationLayerParams {
@@ -45,6 +46,8 @@ export default class EditAnnotationLayer extends BaseLayer<GeoJSON.Feature> {
 
   hoverHandleIndex: number;
 
+  polyMode: 'Outside' | 'Hole';
+
   lineLimit: number;
 
   lineList: GeoJSON.Position[];
@@ -59,6 +62,7 @@ export default class EditAnnotationLayer extends BaseLayer<GeoJSON.Feature> {
     this.hoverHandleIndex = -1;
     this.lineLimit = 2;
     this.lineList = [];
+    this.polyMode = 'Outside';
 
     //Only initialize once, prevents recreating Layer each edit
     this.initialize();
@@ -95,6 +99,10 @@ export default class EditAnnotationLayer extends BaseLayer<GeoJSON.Feature> {
       this.featureLayer.geoOn(geo.event.actiondown,
         (e: GeoEvent) => this.pointCreation(e));
     }
+  }
+
+  setPolyMode(mode: 'Outside' | 'Hole') {
+    this.polyMode = mode;
   }
 
   pointCreation(e: GeoEvent) {
@@ -221,6 +229,22 @@ export default class EditAnnotationLayer extends BaseLayer<GeoJSON.Feature> {
         }
       });
     }
+    console.log(`POLYMODE IN GETJSON: ${this.polyMode}`);
+    console.log(geoJSONData);
+    if (geoJSONData && geoJSONData.coordinates && this.polyMode === 'Hole') {
+      [this.lineList] = geoJSONData.coordinates;
+      if (!geoJSONData.coordinates[1]) {
+        return undefined;
+      }
+      geoJSONData = cloneDeep(geoJSONData);
+      [, geoJSONData.coordinates[0]] = geoJSONData.coordinates;
+    } else if (geoJSONData && geoJSONData.coordinates && this.polyMode === 'Outside') {
+      if (geoJSONData.coordinates[1]) {
+        [, this.lineList] = geoJSONData.coordinates;
+      }
+    }
+    console.log('After Edit Mode get GeoJSON');
+    console.log(this.lineList);
     return geoJSONData;
   }
 
@@ -315,6 +339,16 @@ export default class EditAnnotationLayer extends BaseLayer<GeoJSON.Feature> {
         this.applyStylesToAnnotations();
         // State doesn't change at the end of editing so this will
         // swap into edit mode once geoJS is done
+        console.log('editStateChanged');
+        if (this.polyMode === 'Hole') {
+          const [tempCoord] = this.formattedData[0].geometry.coordinates;
+          this.formattedData[0].geometry.coordinates[0] = this.lineList;
+          this.formattedData[0].geometry.coordinates[1] = tempCoord;
+        } else if (this.type === 'Polygon' && this.lineList.length) {
+          this.formattedData[0].geometry.coordinates[1] = this.lineList;
+        }
+
+
         setTimeout(() => this.$emit('update:geojson', this.formattedData[0], this.type, this.selectedKey), 0);
       }
     }
@@ -346,6 +380,16 @@ export default class EditAnnotationLayer extends BaseLayer<GeoJSON.Feature> {
             }];
           }
           // must ALWAYS emit a polygon or point
+          console.log('handleEditAction');
+          console.log(this.lineList);
+          if (this.polyMode === 'Hole') {
+            const [tempCoord] = this.formattedData[0].geometry.coordinates;
+            this.formattedData[0].geometry.coordinates[0] = this.lineList;
+            this.formattedData[0].geometry.coordinates[1] = tempCoord;
+          } else if (this.type === 'Polygon' && this.lineList.length) {
+            this.formattedData[0].geometry.coordinates[1] = this.lineList;
+          }
+          console.log(this.formattedData[0]);
           this.changed = true;
           this.$emit('update:geojson', this.formattedData[0], this.type, this.selectedKey);
         }

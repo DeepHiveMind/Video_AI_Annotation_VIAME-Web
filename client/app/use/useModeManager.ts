@@ -73,6 +73,14 @@ export default function useModeManager({
   const selectedKey = ref('');
   // which type is currently being edited, if any
   const editingMode = computed(() => editingTrack.value && annotationModes.editing);
+
+  const polyMode = ref('Outside');
+  const innerMode = computed(() => {
+    if (editingMode.value === 'Polygon' && annotationModes.editing) {
+      return polyMode.value;
+    }
+    return 'none';
+  });
   // which types are currently visible, always including the editingType
   const visibleModes = computed(() => (
     uniq(annotationModes.visible.concat(editingMode.value || []))
@@ -87,6 +95,24 @@ export default function useModeManager({
     }
   }
 
+  //Only toggle the inner mode if there is an existing outer wring for the select geometry
+  function toggleInnerMode() {
+    if (selectedTrackId.value && editingMode.value === 'Polygon' && annotationModes.editing && polyMode.value === 'Outside') {
+      const track = trackMap.get(selectedTrackId.value);
+      if (track) {
+        const geoJSON = track.getFeatureGeometry(frame.value, {
+          key: selectedKey.value,
+          type: 'Polygon',
+        });
+        if (geoJSON.length && geoJSON[0].geometry.coordinates.length
+          && geoJSON[0].geometry.coordinates[0]) {
+          polyMode.value = 'Hole';
+          return;
+        }
+      }
+    }
+    polyMode.value = 'Outside';
+  }
   function handleSelectKey(key: string | '') {
     selectedKey.value = key;
   }
@@ -171,6 +197,7 @@ export default function useModeManager({
   }
 
   const headTailReservedKeys = ['head', 'tail', 'HeadTails'];
+
 
   function handleUpdateGeoJSON(
     frameNum: number,
@@ -331,8 +358,10 @@ export default function useModeManager({
     visibleModes,
     selectedFeatureHandle,
     selectedKey,
+    innerMode,
     handler: {
       handleFeaturePointing,
+      toggleInnerMode,
       selectTrack: handleSelectTrack,
       trackEdit: handleTrackEdit,
       trackTypeChange: handleTrackTypeChange,
