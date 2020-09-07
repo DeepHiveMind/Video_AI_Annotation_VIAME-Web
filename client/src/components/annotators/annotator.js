@@ -34,6 +34,7 @@ export default {
       maxFrame: 0,
       syncedFrame: 0,
       observer: null,
+      cursor: 'default',
     };
   },
   created() {
@@ -43,6 +44,7 @@ export default {
     this.provided.$on('pause', this.pause);
     this.provided.$on('seek', this.seek);
     this.provided.$on('reset-zoom', this.resetZoom);
+    this.provided.$on('set-cursor', this.setCursor);
     this.emitFrame();
     this.emitFrame = throttle(this.emitFrame, 200);
   },
@@ -62,6 +64,9 @@ export default {
     }
   },
   methods: {
+    setCursor(newCursor) {
+      this.cursor = `${newCursor}`;
+    },
     baseInit() {
       const params = geo.util.pixelCoordinateParams(
         this.$refs.container,
@@ -134,5 +139,6 @@ export default {
       this.geoViewer.zoom(-1);
       this.geoViewer.center({ x: 0, y: 0 });
     },
+
   },
 };

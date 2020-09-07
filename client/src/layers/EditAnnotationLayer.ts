@@ -23,6 +23,20 @@ const typeMapper = {
   Point: 'point',
   rectangle: 'rectangle',
 };
+
+const rectVertex = [
+  'sw-resize',
+  'nw-resize',
+  'ne-resize',
+  'se-resize',
+];
+const rectEdge = [
+  'w-resize',
+  'n-resize',
+  'e-resize',
+  's-resize',
+
+];
 /**
  * This class is used to edit annotations within the viewer
  * It will do and display different things based on it either being in
@@ -149,6 +163,28 @@ export default class EditAnnotationLayer extends BaseLayer<GeoJSON.Feature> {
         this.hoverHandleIndex = -1;
       }
     }
+    if (e.enable) {
+      if (this.type === 'rectangle') {
+        if (e.handle.handle.type === 'vertex') {
+          this.annotator.$emit('set-cursor', rectVertex[e.handle.handle.index]);
+        } else if (e.handle.handle.type === 'edge') {
+          this.annotator.$emit('set-cursor', rectEdge[e.handle.handle.index]);
+        }
+      } else if (this.type === 'Polygon') {
+        if (e.handle.handle.type === 'vertex') {
+          this.annotator.$emit('set-cursor', 'grab');
+        } else if (e.handle.handle.type === 'edge') {
+          this.annotator.$emit('set-cursor', 'copy');
+        }
+      }
+      if (e.handle.handle.type === 'center') {
+        this.annotator.$emit('set-cursor', 'grabbing');
+      } else if (e.handle.handle.type === 'resize') {
+        this.annotator.$emit('set-cursor', 'nwse-resize');
+      }
+    } else if (this.mode !== 'creation') {
+      this.annotator.$emit('set-cursor', 'default');
+    }
   }
 
   applyStylesToAnnotations() {
@@ -200,6 +236,7 @@ export default class EditAnnotationLayer extends BaseLayer<GeoJSON.Feature> {
         this.hoverHandleIndex = -1;
         this.$emit('update:selectedIndex', this.selectedHandleIndex, this.type, this.selectedKey);
       }
+      this.annotator.$emit('set-cursor', 'default');
     }
   }
 
@@ -258,6 +295,7 @@ export default class EditAnnotationLayer extends BaseLayer<GeoJSON.Feature> {
         }
         if (!geoJSONData || this.type === 'Point') {
           this.mode = 'creation';
+          this.annotator.$emit('set-cursor', 'crosshair');
           this.featureLayer.mode(typeMapper[this.type]);
         } else {
           const geojsonFeature: GeoJSON.Feature = {
@@ -293,6 +331,7 @@ export default class EditAnnotationLayer extends BaseLayer<GeoJSON.Feature> {
     } else {
       // point or rectangle mode for the editor
       this.mode = 'creation';
+      this.annotator.$emit('set-cursor', 'crosshair');
       if (this.type === 'LineString') {
         this.lineList = [];
       }
