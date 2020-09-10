@@ -32,19 +32,44 @@ function geojsonToBound(geojson: GeoJSON.Feature<GeoJSON.Polygon>): RectBounds {
   return [coords[1][0], coords[1][1], coords[3][0], coords[3][1]];
 }
 
+function reOrdergeoJSON(coords: GeoJSON.Position[]) {
+  const x1 = coords[0][0] < coords[2][0] ? coords[0][0] : coords[2][0];
+  const x2 = coords[0][0] < coords[2][0] ? coords[2][0] : coords[0][0];
+  const y1 = coords[0][1] < coords[2][1] ? coords[0][1] : coords[2][1];
+  const y2 = coords[0][1] < coords[1][1] ? coords[2][1] : coords[0][1];
+  return [
+    [x1, y2],
+    [x1, y1],
+    [x2, y1],
+    [x2, y2],
+    [x1, y2],
+  ];
+}
+
+function reOrderBounds(bounds: RectBounds) {
+  const x1 = bounds[0] < bounds[2] ? bounds[0] : bounds[2];
+  const x2 = bounds[0] < bounds[2] ? bounds[2] : bounds[0];
+  const y1 = bounds[1] < bounds[3] ? bounds[1] : bounds[3];
+  const y2 = bounds[1] < bounds[3] ? bounds[3] : bounds[1];
+  return [x1, y1, x2, y2];
+}
+
 function boundToGeojson(bounds: RectBounds): GeoJSON.Polygon {
   /* return clockwise 5 point rectangle beginning with (x1, y2) (bottom left)
    * because that's what GeoJS likes
    */
+  //We want to maintain orientation with bounds so lets order them properly
+  const updatedBounds = reOrderBounds(bounds);
+
   return {
     type: 'Polygon',
     coordinates: [
       [
-        [bounds[0], bounds[3]],
-        [bounds[0], bounds[1]],
-        [bounds[2], bounds[1]],
-        [bounds[2], bounds[3]],
-        [bounds[0], bounds[3]],
+        [updatedBounds[0], updatedBounds[3]],
+        [updatedBounds[0], updatedBounds[1]],
+        [updatedBounds[2], updatedBounds[1]],
+        [updatedBounds[2], updatedBounds[3]],
+        [updatedBounds[0], updatedBounds[3]],
       ],
     ],
   };
@@ -153,6 +178,7 @@ export {
   findBounds,
   updateBounds,
   geojsonToBound,
+  reOrdergeoJSON,
   updateSubset,
   removePoint,
 };

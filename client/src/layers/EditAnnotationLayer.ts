@@ -1,7 +1,7 @@
 /*eslint class-methods-use-this: "off"*/
 import { FrameDataTrack } from 'vue-media-annotator/layers/LayerTypes';
 import BaseLayer, { BaseLayerParams, LayerStyle } from 'vue-media-annotator/layers/BaseLayer';
-import { boundToGeojson } from 'vue-media-annotator/utils';
+import { boundToGeojson, reOrdergeoJSON } from 'vue-media-annotator/utils';
 import geo, { GeoEvent } from 'geojs';
 
 export type EditAnnotationTypes = 'Point' | 'rectangle' | 'Polygon' | 'LineString';
@@ -178,7 +178,7 @@ export default class EditAnnotationLayer extends BaseLayer<GeoJSON.Feature> {
         }
       }
       if (e.handle.handle.type === 'center') {
-        this.annotator.$emit('set-cursor', 'grabbing');
+        this.annotator.$emit('set-cursor', 'move');
       } else if (e.handle.handle.type === 'resize') {
         this.annotator.$emit('set-cursor', 'nwse-resize');
       }
@@ -372,6 +372,12 @@ export default class EditAnnotationLayer extends BaseLayer<GeoJSON.Feature> {
             e.annotation.geojson()
           );
           if (this.formattedData.length > 0) {
+            if (this.type === 'rectangle') {
+              console.log(newGeojson.geometry.coordinates[0]);
+              // eslint-disable-next-line max-len
+              newGeojson.geometry.coordinates[0] = reOrdergeoJSON(newGeojson.geometry.coordinates[0]);
+              console.log(newGeojson.geometry.coordinates[0]);
+            }
             // update existing feature
             this.formattedData[0].geometry = newGeojson.geometry;
           } else {
