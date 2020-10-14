@@ -1,10 +1,13 @@
 import os
 import sys
 from pathlib import Path
-from typing import Optional, Tuple
+from typing import Optional, Tuple, Iterable
 
 from girder import events, plugin
+from girder.constants import SortDir
+from girder_jobs.models.job import Job
 from girder.models.setting import Setting
+from girder.models.user import User
 
 from .client_webroot import ClientWebroot
 from .event import check_existing_annotations
@@ -45,6 +48,38 @@ def get_pipeline_paths() -> Tuple[Optional[Path], Optional[Path]]:
     return (main_pipeline_path, trained_pipeline_path)
 
 
+def handle_existing_jobs():
+    running, cancelling = 2, 824
+    admin = next(User().getAdmins())
+    stale_jobs: Iterable[Job] = Job().list(
+        user="all",
+        statuses=[running, cancelling],
+        sort=[("created", SortDir.ASCENDING)],
+        currentUser=admin,
+    )
+
+    for job in stale_jobs:
+        # TODO: Determine why the below code places new jobs into an inactive state
+        # if job["status"] == running:
+        #     kwargs = json.loads(job["kwargs"])
+        #     Job().scheduleJob(
+        #         Job().createJob(
+        #             title=job["title"],
+        #             type=job["type"],
+        #             args=job["args"],
+        #             kwargs=kwargs,
+        #             public=job["public"],
+        #             asynchronous=job["asynchronous"],
+        #             handler="celery_handler",
+        #             user={"_id": job["userId"]},
+        #             otherFields={"celeryTaskId": job["celeryTaskId"]},
+        #         )
+        #     )
+
+        # Delete old job
+        Job().remove(job)
+
+
 class GirderPlugin(plugin.GirderPlugin):
     def load(self, info):
 
@@ -77,3 +112,7 @@ class GirderPlugin(plugin.GirderPlugin):
             'worker.backend',
             os.environ.get('WORKER_BACKEND', 'amqp://guest:guest@rabbit/'),
         )
+
+        # Create dependency on jobs
+        plugin.getPlugin('jobs').load(info)
+        handle_existing_jobs()
