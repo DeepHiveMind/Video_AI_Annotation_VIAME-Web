@@ -40,8 +40,8 @@
   "include": [
     "viame-web-common/**/*.ts",
     "viame-web-common/**/*.vue",
-    "platform/*/**.vue",
-    "platform/*/**.ts",
+    "platform/**/*.vue",
+    "platform/**/*.ts",
     "src/**/*.ts",
     "src/**/*.vue",
     "tests/**/*.ts",

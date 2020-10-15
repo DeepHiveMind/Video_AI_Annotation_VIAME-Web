@@ -1,7 +1,7 @@
 <script lang="ts">
 import { defineComponent, ref } from '@vue/composition-api';
 import Viewer from 'viame-web-common/components/Viewer.vue';
-
+import { readToBlob } from '../api/main';
 /**
  * ViewerLoader is responsible for loading
  * data from girder.
@@ -22,7 +22,7 @@ export default defineComponent({
     const frameRate = ref(30);
     const annotatorType = ref('VideoAnnotator');
     const imageData = ref([]);
-    const videoUrl = ref('');
+    const videoUrl = ref(readToBlob('foo'));
 
     return {
       dataset,

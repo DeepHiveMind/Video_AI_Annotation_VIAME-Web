@@ -19,7 +19,6 @@ module.exports = {
   chainWebpack: (config) => {
     config.output.strictModuleExceptionHandling(true);
     config.resolve.symlinks(false);
-    config.resolve.alias.set('@', path.resolve(__dirname, 'viame-web-common'));
     config.resolve.alias.set('viame-web-common', path.resolve(__dirname, 'viame-web-common'));
     config.resolve.alias.set('vue-media-annotator', path.resolve(__dirname, 'src'));
   },
@@ -28,6 +27,12 @@ module.exports = {
       mainProcessFile: 'platform/desktop/background.ts',
       renderProcessFile: 'platform/desktop/main.ts',
       builderOptions: {},
+      /**
+       * Node Integration is needed for this app,
+       * so we will have to be careful with RCE
+       * and issues with running unsafe scripts
+       */
+      nodeIntegration: true,
     },
   },
 };
