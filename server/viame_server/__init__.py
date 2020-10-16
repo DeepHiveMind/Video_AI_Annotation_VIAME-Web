@@ -1,13 +1,13 @@
 import os
 import sys
 from pathlib import Path
-from typing import Optional, Tuple, Iterable
+from typing import Iterable, Optional, Tuple
 
 from girder import events, plugin
 from girder.constants import SortDir
-from girder_jobs.models.job import Job
 from girder.models.setting import Setting
 from girder.models.user import User
+from girder_jobs.models.job import Job
 
 from .client_webroot import ClientWebroot
 from .event import check_existing_annotations
