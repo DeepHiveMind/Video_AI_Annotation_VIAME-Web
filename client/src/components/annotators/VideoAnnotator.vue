@@ -24,7 +24,6 @@ export default {
     this.video = video;
     video.preload = 'auto';
     video.src = this.videoUrl;
-    console.log(video);
     video.onloadedmetadata = () => {
       video.onloadedmetadata = null;
       this.width = video.videoWidth;

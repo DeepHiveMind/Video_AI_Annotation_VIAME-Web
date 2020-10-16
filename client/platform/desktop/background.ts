@@ -1,8 +1,9 @@
-import { app, protocol, BrowserWindow } from 'electron';
+import { app, protocol, BrowserWindow, ipcMain } from 'electron';
 import { createProtocol } from 'vue-cli-plugin-electron-builder/lib';
 import installExtension, { VUEJS_DEVTOOLS } from 'electron-devtools-installer';
-
-const path = require("path");
+import server from './api/mediaserver';
+import { add } from 'lodash';
+// const path = require("path");
 // const {getPluginEntry} = require("mpv.js");
 // Absolute path to the plugin directory.
 // const pluginDir = path.join(path.dirname(require.resolve("mpv.js")), "build", "Release");
@@ -56,7 +57,20 @@ function createWindow() {
   win.on('closed', () => {
     win = null;
   });
+  server.listen(0, () => {
+    let address = server.address();
+    let port = 0;
+    if (typeof address === 'object' && address !== null) {
+      port = address.port || 0;
+      address = address.address || '';
+    }
+    console.log(`Server listening on ${address}:${port}`);
+  });
 }
+
+ipcMain.on('info', (event) => {
+  event.returnValue = server.address();
+});
 
 // Quit when all windows are closed.
 app.on('window-all-closed', () => {

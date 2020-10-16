@@ -1,20 +1,38 @@
 import { TrackData } from 'vue-media-annotator/track';
+import fs from 'fs';
+// eslint-disable-next-line
+import mime from 'mime-types';
+// eslint-disable-next-line
+import path from 'path';
 import {
-  Attribute, DatasetMeta, DatasetMetaMutable, Pipelines, SaveDetectionsArgs,
+  Attribute, DatasetMeta, DatasetMetaMutable, FrameImage, Pipelines, SaveDetectionsArgs,
 } from 'viame-web-common/apispec';
 // eslint-disable-next-line
-import { remote } from 'electron';
-// import fs from 'fs';
+import { ipcRenderer, remote } from 'electron';
+import { AddressInfo } from 'net';
 
-function readToBlob(path: string) {
-  const blob = new Blob(['something'], { type: 'video/mp4' });
-  // blob.slice = (start: number, end: number, contentType: string) => {
-  //   throw new Error(`${start} ${end} ${contentType}`);
-  // };
-  // blob.stream = () => {
-  //   throw new Error('readableStream');
-  // };
-  return URL.createObjectURL(blob);
+const websafeVideoTypes = [
+  'video/mp4',
+  'video/webm',
+];
+
+const websafeImageTypes = [
+  'image/apng',
+  'image/bmp',
+  'image/gif',
+  'image/jpeg',
+  'image/png',
+  'image/svg+xml',
+  'image/webp',
+];
+
+const mediaServerInfo: AddressInfo = ipcRenderer.sendSync('info');
+
+async function openFromDisk() {
+  const results = await remote.dialog.showOpenDialog({
+    properties: ['openFile', 'openDirectory'],
+  });
+  return results;
 }
 
 async function getAttributes() {
@@ -35,20 +53,48 @@ async function loadDetections(datasetId: string) {
 async function saveDetections(datasetId: string, args: SaveDetectionsArgs) {
   return Promise.resolve();
 }
-// eslint-disable-next-line
+
 async function loadMetadata(datasetId: string): Promise<DatasetMeta> {
-  // const currentWindow = remote.
-  // console.log(currentWindow);
-  // if (currentWindow === null) {
-  //   throw new Error('BrowserWindow focused was null');
-  // }
-  // const results = await remote.dialog.showOpenDialog({
-  //   properties: ['openFile'],
-  // });
-  // console.log(results);
+  let datasetType = undefined as 'video' | 'image-sequence' | undefined;
+  let videoUrl = '';
+  const imageData = [] as FrameImage[];
+
+  function processFile(abspath: string) {
+    const basename = path.basename(abspath);
+    const abspathuri = `http://localhost:${mediaServerInfo.port}${abspath}`;
+    const mimetype = mime.lookup(abspath);
+    if (mimetype && websafeVideoTypes.includes(mimetype)) {
+      datasetType = 'video';
+      videoUrl = abspathuri;
+    } else if (mimetype && websafeImageTypes.includes(mimetype)) {
+      datasetType = 'image-sequence';
+      imageData.push({
+        url: abspathuri,
+        filename: basename,
+      });
+    }
+  }
+
+  const info = fs.statSync(datasetId);
+
+  if (info.isDirectory()) {
+    const contents = fs.readdirSync(datasetId);
+    for (let i = 0; i < contents.length; i += 1) {
+      processFile(path.join(datasetId, contents[i]));
+    }
+  } else {
+    processFile(datasetId);
+  }
+
+  if (datasetType === undefined) {
+    throw new Error(`Cannot open dataset ${datasetId}: No images or video found`);
+  }
+
   return Promise.resolve({
-    type: 'video',
-    fps: 30,
+    type: datasetType,
+    fps: 10,
+    imageData: datasetType === 'image-sequence' ? imageData : [],
+    videoUrl: datasetType === 'video' ? videoUrl : undefined,
   });
 }
 // eslint-disable-next-line
@@ -57,11 +103,11 @@ async function saveMetadata(datasetId: string, metadata: DatasetMetaMutable) {
 }
 
 export {
-  readToBlob,
   getAttributes,
   getPipelineList,
   runPipeline,
   loadDetections,
+  openFromDisk,
   saveDetections,
   loadMetadata,
   saveMetadata,
