@@ -26,6 +26,12 @@ const websafeImageTypes = [
   'image/webp',
 ];
 
+export interface DesktopDataset {
+  root: string;
+  videoPath?: string;
+  meta: DatasetMeta;
+}
+
 const mediaServerInfo: AddressInfo = ipcRenderer.sendSync('info');
 
 async function openFromDisk() {
@@ -54,9 +60,10 @@ async function saveDetections(datasetId: string, args: SaveDetectionsArgs) {
   return Promise.resolve();
 }
 
-async function loadMetadata(datasetId: string): Promise<DatasetMeta> {
+async function loadMetadata(datasetId: string): Promise<DesktopDataset> {
   let datasetType = undefined as 'video' | 'image-sequence' | undefined;
   let videoUrl = '';
+  let videoPath = '';
   const imageData = [] as FrameImage[];
 
   function processFile(abspath: string) {
@@ -65,6 +72,7 @@ async function loadMetadata(datasetId: string): Promise<DatasetMeta> {
     const mimetype = mime.lookup(abspath);
     if (mimetype && websafeVideoTypes.includes(mimetype)) {
       datasetType = 'video';
+      videoPath = abspath;
       videoUrl = abspathuri;
     } else if (mimetype && websafeImageTypes.includes(mimetype)) {
       datasetType = 'image-sequence';
@@ -91,10 +99,14 @@ async function loadMetadata(datasetId: string): Promise<DatasetMeta> {
   }
 
   return Promise.resolve({
-    type: datasetType,
-    fps: 10,
-    imageData: datasetType === 'image-sequence' ? imageData : [],
-    videoUrl: datasetType === 'video' ? videoUrl : undefined,
+    root: datasetId,
+    videoPath,
+    meta: {
+      type: datasetType,
+      fps: 10,
+      imageData: datasetType === 'image-sequence' ? imageData : [],
+      videoUrl: datasetType === 'video' ? videoUrl : undefined,
+    },
   });
 }
 // eslint-disable-next-line

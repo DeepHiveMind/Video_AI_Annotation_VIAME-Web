@@ -7,13 +7,13 @@
 <script lang="ts">
 import { defineComponent } from '@vue/composition-api';
 import { provideApi } from 'viame-web-common/apispec';
-import * as api from './api/main';
+import { observe } from './store/dataset';
 
 export default defineComponent({
   name: 'App',
   components: {},
   setup() {
-    provideApi(api);
+    provideApi(observe());
   },
 });
 </script>

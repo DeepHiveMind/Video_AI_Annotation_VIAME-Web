@@ -1,6 +1,8 @@
 <script lang="ts">
-import { defineComponent, ref } from '@vue/composition-api';
+import { defineComponent } from '@vue/composition-api';
 import Viewer from 'viame-web-common/components/Viewer.vue';
+
+import { getDataset } from '../store/dataset';
 /**
  * ViewerLoader is responsible for loading
  * data from girder.
@@ -12,6 +14,10 @@ export default defineComponent({
       type: String,
       required: true,
     },
+  },
+  setup(props) {
+    const dataset = getDataset(props.path);
+    return { dataset };
   },
 });
 </script>
@@ -36,8 +42,7 @@ export default defineComponent({
         v-if="dataset"
         class="title pl-3"
       >
-        Hello!
-        <!-- {{ dataset.name }} -->
+        {{ dataset.videoPath || dataset.root }}
       </span>
     </template>
   </Viewer>
